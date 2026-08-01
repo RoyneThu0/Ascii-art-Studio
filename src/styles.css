@@ -1,0 +1,122 @@
+:root {
+  --bg: #0b0d12;
+  --panel: #12151c;
+  --panel-2: #171b24;
+  --line: #232936;
+  --text: #c8d0d8;
+  --muted: #7c8798;
+  --accent: #5eead4;
+  --accent-dim: #2dd4bf22;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+/* ── Top bar ─────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo {
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 22px; font-weight: 700; color: var(--accent);
+  background: var(--accent-dim);
+  width: 40px; height: 40px; border-radius: 10px;
+  display: grid; place-items: center;
+}
+.brand h1 { font-size: 15px; margin: 0; letter-spacing: .2px; }
+.brand p { font-size: 12px; margin: 2px 0 0; color: var(--muted); }
+
+.modes { display: flex; gap: 4px; background: var(--panel-2); padding: 4px; border-radius: 10px; }
+.mode {
+  border: 0; background: transparent; color: var(--muted);
+  padding: 7px 16px; border-radius: 7px; cursor: pointer;
+  text-transform: capitalize; font-size: 13px; font-weight: 500;
+  transition: background .15s, color .15s;
+}
+.mode:hover { color: var(--text); }
+.mode.active { background: var(--accent-dim); color: var(--accent); }
+
+/* ── Layout ──────────────────────────────── */
+.layout { display: flex; flex: 1; min-height: 0; }
+
+.sidebar {
+  width: 300px; flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  padding: 16px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+  background: var(--panel);
+}
+
+.panel { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.panel h2 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--muted); margin: 0 0 12px;
+}
+
+.dropzone {
+  display: block; border: 1.5px dashed var(--line); border-radius: 10px;
+  padding: 22px 14px; text-align: center; cursor: pointer;
+  color: var(--muted); font-size: 13px; transition: border-color .15s, color .15s;
+}
+.dropzone:hover { border-color: var(--accent); color: var(--text); }
+.dropzone input { display: none; }
+
+button.primary, .exports button {
+  border: 1px solid var(--line); background: var(--panel);
+  color: var(--text); padding: 10px 14px; border-radius: 9px;
+  cursor: pointer; font-size: 13px; transition: background .15s, border-color .15s;
+}
+button.primary { width: 100%; background: var(--accent-dim); border-color: transparent; color: var(--accent); }
+button.primary:hover, .exports button:hover { border-color: var(--accent); }
+
+/* ── Controls ───────────────────────────── */
+.field { display: block; margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+
+input[type='range'] { width: 100%; accent-color: var(--accent); }
+select {
+  width: 100%; padding: 8px; border-radius: 8px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--line);
+  font-size: 13px;
+}
+input[type='color'] {
+  width: 100%; height: 34px; padding: 2px; border-radius: 8px;
+  background: var(--panel); border: 1px solid var(--line); cursor: pointer;
+}
+
+.row { display: flex; gap: 12px; }
+.row > * { flex: 1; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; }
+.check input { accent-color: var(--accent); }
+
+.exports { display: flex; gap: 8px; }
+.exports button { flex: 1; padding: 10px 6px; }
+
+/* ── Stage ──────────────────────────────── */
+.stage { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.stage-inner {
+  flex: 1; overflow: auto; display: grid; place-items: center; padding: 24px;
+  background:
+    repeating-linear-gradient(45deg, #0e1117 0 12px, #0c0f15 12px 24px);
+}
+.output { image-rendering: pixelated; border-radius: 4px; max-width: none; }
+.status {
+  border-top: 1px solid var(--line); padding: 10px 20px;
+  font-size: 12px; color: var(--muted); font-family: 'SF Mono', Menlo, monospace;
+  background: var(--panel);
+}
