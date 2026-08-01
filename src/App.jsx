@@ -3,6 +3,12 @@ import { CHAR_SETS, imageToAscii, renderToCanvas } from './asciiEngine'
 import Controls from './components/Controls.jsx'
 import SourcePanel from './components/SourcePanel.jsx'
 
+const MODES = [
+  { id: 'image', icon: '▣' },
+  { id: 'webcam', icon: '◉' },
+  { id: 'video', icon: '▶' },
+]
+
 const DEFAULT_SETTINGS = {
   cols: 140,
   charSet: 'standard',
@@ -88,33 +94,31 @@ export default function App() {
           <span className="logo">#</span>
           <div>
             <h1>ASCII Art Studio</h1>
-            <p>Images · Webcam · Video → text art</p>
           </div>
         </div>
+
         <nav className="modes">
-          {['image', 'webcam', 'video'].map((m) => (
+          {MODES.map((m) => (
             <button
-              key={m}
-              className={mode === m ? 'mode active' : 'mode'}
+              key={m.id}
+              className={mode === m.id ? 'mode active' : 'mode'}
               onClick={() => {
                 setSource(null)
                 lastText.current = ''
-                setMode(m)
+                setMode(m.id)
               }}
             >
-              {m}
+              <span className="mode-icon" aria-hidden>{m.icon}</span>
+              {m.id}
             </button>
           ))}
         </nav>
+
+        <div className="topbar-right" />
       </header>
 
       <main className="layout">
         <aside className="sidebar">
-          <SourcePanel
-            mode={mode}
-            onSource={setSource}
-            onStatus={setStatus}
-          />
           <Controls
             settings={settings}
             setSettings={setSettings}
@@ -129,7 +133,27 @@ export default function App() {
 
         <section className="stage">
           <div className="stage-inner">
-            <canvas ref={canvasRef} className="output" />
+            {mode === 'webcam' && source && (
+              <div className="live-badge">
+                <span className="live-dot on" />
+                live
+              </div>
+            )}
+
+            <canvas
+              ref={canvasRef}
+              className="output"
+              style={{ display: source ? 'block' : 'none' }}
+            />
+
+            {/* Source picker lives in the centre of the stage; kept mounted
+                (hidden) once a source is loaded so its media elements survive. */}
+            <div
+              className="stage-source"
+              style={{ display: source ? 'none' : 'flex' }}
+            >
+              <SourcePanel mode={mode} onSource={setSource} onStatus={setStatus} />
+            </div>
           </div>
           <div className="status">{status}</div>
         </section>

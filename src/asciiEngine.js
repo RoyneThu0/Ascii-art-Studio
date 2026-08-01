@@ -123,8 +123,8 @@ export function renderToCanvas(canvas, result, opts) {
 
   canvas.width = Math.ceil(cols * cellW * dpr)
   canvas.height = Math.ceil(rows * cellH * dpr)
-  canvas.style.width = cols * cellW + 'px'
-  canvas.style.height = rows * cellH + 'px'
+  // Display size is handled by CSS (.output scales to fit the stage);
+  // the internal resolution above stays sharp for PNG export.
 
   const ctx = canvas.getContext('2d')
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
