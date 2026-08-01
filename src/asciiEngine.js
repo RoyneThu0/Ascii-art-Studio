@@ -44,6 +44,7 @@ export function imageToAscii(source, options) {
     cols = 120,
     charSet = 'standard',
     invert = false,
+    mirror = false,
     brightness = 1,
     contrast = 1,
   } = options
@@ -56,7 +57,15 @@ export function imageToAscii(source, options) {
 
   sampler.width = cols
   sampler.height = rows
-  sctx.drawImage(source, 0, 0, cols, rows)
+  if (mirror) {
+    // Flip horizontally: translate to the right edge, then draw at -1 x-scale.
+    sctx.save()
+    sctx.setTransform(-1, 0, 0, 1, cols, 0)
+    sctx.drawImage(source, 0, 0, cols, rows)
+    sctx.restore()
+  } else {
+    sctx.drawImage(source, 0, 0, cols, rows)
+  }
 
   let data
   try {

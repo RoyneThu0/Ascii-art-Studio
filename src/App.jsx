@@ -34,11 +34,12 @@ export default function App() {
     const canvas = canvasRef.current
     if (!el || !canvas) return
     const s = settingsRef.current
-    const result = imageToAscii(el, s)
+    // Webcam is shown mirrored, like a selfie view.
+    const result = imageToAscii(el, { ...s, mirror: mode === 'webcam' })
     if (!result) return
     lastText.current = result.text
     renderToCanvas(canvas, result, s)
-  }, [source])
+  }, [source, mode])
 
   // Static sources (image) render on demand; live sources loop.
   const isLive = mode === 'webcam' || mode === 'video'
