@@ -16,7 +16,6 @@ const DEFAULT_SETTINGS = {
   color: false,
   brightness: 1,
   contrast: 1,
-  fontSize: 8,
   fg: '#c8d0d8',
   bg: '#12151c',
 }
@@ -28,6 +27,7 @@ export default function App() {
   const [status, setStatus] = useState('Load an image, webcam, or video to begin.')
 
   const canvasRef = useRef(null)
+  const stageRef = useRef(null)
   const lastText = useRef('')
   const rafRef = useRef(0)
 
@@ -44,7 +44,11 @@ export default function App() {
     const result = imageToAscii(el, { ...s, mirror: mode === 'webcam' })
     if (!result) return
     lastText.current = result.text
-    renderToCanvas(canvas, result, s)
+
+    // Fill the stage: glyphs are sized to the available box each frame.
+    const box = stageRef.current?.getBoundingClientRect()
+    const fit = box ? { w: box.width - 28, h: box.height - 28 } : null
+    renderToCanvas(canvas, result, { ...s, fit })
   }, [source, mode])
 
   // Static sources (image) render on demand; live sources loop.
@@ -69,6 +73,14 @@ export default function App() {
   useEffect(() => {
     if (source && !isLive) renderFrame()
   }, [settings, source, isLive, renderFrame])
+
+  // Static sources also need a redraw when the stage size changes.
+  useEffect(() => {
+    if (!source || isLive) return
+    const onResize = () => renderFrame()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [source, isLive, renderFrame])
 
   const copyText = async () => {
     if (!lastText.current) return
@@ -132,7 +144,7 @@ export default function App() {
         </aside>
 
         <section className="stage">
-          <div className="stage-inner">
+          <div className="stage-inner" ref={stageRef}>
             {mode === 'webcam' && source && (
               <div className="live-badge">
                 <span className="live-dot on" />

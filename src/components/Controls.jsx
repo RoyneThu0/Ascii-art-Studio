@@ -24,11 +24,6 @@ export default function Controls({ settings, setSettings, charSets }) {
         </select>
       </Field>
 
-      <Field label={`Font size — ${settings.fontSize}px`}>
-        <input type="range" min="4" max="20" step="1"
-          value={settings.fontSize} onChange={set('fontSize')} />
-      </Field>
-
       <Field label={`Brightness — ${settings.brightness.toFixed(2)}`}>
         <input type="range" min="0.2" max="2" step="0.05"
           value={settings.brightness} onChange={set('brightness')} />

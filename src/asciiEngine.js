@@ -16,9 +16,10 @@ export const CHAR_SETS = {
   scramble: '@MHNWgkjihmnpqdbwOZLCJUYXzcvunxrft/|()1{}[]?-_+~<>il!;:,"^`\'. ',
 }
 
-// Monospace glyphs are taller than they are wide. This ratio corrects
-// the vertical squash so output keeps the source's proportions.
-const CHAR_ASPECT = 0.5
+// A monospace glyph cell is taller than it is wide — roughly 0.6:1 for
+// SF Mono / Menlo / Consolas. Rows are reduced by this ratio and the
+// render uses the same ratio for cell width, so proportions are preserved.
+const CHAR_ASPECT = 0.6
 
 // One reusable offscreen canvas for sampling — avoids per-frame allocs.
 const sampler = document.createElement('canvas')
@@ -114,17 +115,23 @@ export function imageToAscii(source, options) {
  * @param opts     { color, fg, bg, fontSize }
  */
 export function renderToCanvas(canvas, result, opts) {
-  const { color = false, fg = '#c8d0d8', bg = '#12151c', fontSize = 8 } = opts
+  const { color = false, fg = '#c8d0d8', bg = '#12151c', fit } = opts
   const { cells, cols, rows } = result
 
-  const cellW = fontSize * CHAR_ASPECT * 2 // char cell width in px
+  // When a fit box is given, scale the glyphs so the art fills the stage at
+  // native resolution — far crisper than rendering small and CSS-scaling up.
+  const fontSize = fit
+    ? Math.max(1, Math.min(fit.w / (cols * CHAR_ASPECT), fit.h / rows))
+    : (opts.fontSize ?? 8)
+
+  const cellW = fontSize * CHAR_ASPECT // glyph advance width
   const cellH = fontSize
   const dpr = window.devicePixelRatio || 1
 
   canvas.width = Math.ceil(cols * cellW * dpr)
   canvas.height = Math.ceil(rows * cellH * dpr)
-  // Display size is handled by CSS (.output scales to fit the stage);
-  // the internal resolution above stays sharp for PNG export.
+  canvas.style.width = cols * cellW + 'px'
+  canvas.style.height = rows * cellH + 'px'
 
   const ctx = canvas.getContext('2d')
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
