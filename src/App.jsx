@@ -25,6 +25,7 @@ export default function App() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS)
   const [source, setSource] = useState(null) // { el } drawable element
   const [status, setStatus] = useState('Load an image, webcam, or video to begin.')
+  const [flash, setFlash] = useState(false)
 
   const canvasRef = useRef(null)
   const stageRef = useRef(null)
@@ -91,6 +92,26 @@ export default function App() {
   const downloadText = () => {
     if (!lastText.current) return
     downloadBlob(new Blob([lastText.current], { type: 'text/plain' }), 'ascii.txt')
+  }
+
+  // Shutter: grab the exact frame on screen and save it as a PNG.
+  // The live loop keeps redrawing, and toBlob() encodes asynchronously, so the
+  // frame is copied to an offscreen canvas synchronously first.
+  const takePhoto = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const shot = document.createElement('canvas')
+    shot.width = canvas.width
+    shot.height = canvas.height
+    shot.getContext('2d').drawImage(canvas, 0, 0)
+
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+    shot.toBlob((blob) => blob && downloadBlob(blob, `ascii-photo-${stamp}.png`), 'image/png')
+
+    setFlash(true)
+    setTimeout(() => setFlash(false), 180)
+    setStatus(`Photo saved — ascii-photo-${stamp}.png`)
   }
 
   const downloadPng = () => {
@@ -166,6 +187,15 @@ export default function App() {
             >
               <SourcePanel mode={mode} onSource={setSource} onStatus={setStatus} />
             </div>
+
+            {mode === 'webcam' && source && (
+              <button className="shutter" onClick={takePhoto} title="Take photo">
+                <span className="shutter-ring" />
+                take photo
+              </button>
+            )}
+
+            {flash && <div className="flash" />}
           </div>
           <div className="status">{status}</div>
         </section>
