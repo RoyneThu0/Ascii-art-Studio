@@ -189,6 +189,11 @@ export default function Controls({
                 value={settings.moshSmear} onChange={set('moshSmear')} />
             </Field>
 
+            <Field label={`Melt — ${settings.moshMelt.toFixed(2)}`}>
+              <input type="range" min="0" max="0.98" step="0.02"
+                value={settings.moshMelt} onChange={set('moshMelt')} />
+            </Field>
+
             <Field label={`Bleed — ${settings.moshBleed.toFixed(2)}`}>
               <input type="range" min="0" max="1" step="0.05"
                 value={settings.moshBleed} onChange={set('moshBleed')} />
@@ -216,6 +221,9 @@ function linked(key, value, s) {
   if (key === 'look' && value === 'receipt' && s.dither === 'off') {
     return { dither: 'floyd-steinberg', solidDither: true }
   }
+  // Datamosh reads as a glitch mostly through colour: smeared skin over
+  // background, streaks of the old scene's palette.
+  if (key === 'mosh' && value) return { color: true }
   return {}
 }
 

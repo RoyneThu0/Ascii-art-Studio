@@ -16,7 +16,8 @@ browser. Built with React + Vite.
   exports.
 - **Datamosh** — the dropped-keyframe glitch: motion vectors from the live feed
   are applied to a stale frame, so the old picture smears along with the new
-  motion until a keyframe snaps it back.
+  motion and keeps melting after it, until a keyframe snaps it back. Turns
+  colour on when enabled, since the glitch reads mostly through colour.
 - **Receipt ticket** — prints the art onto a thermal receipt: torn paper
   edges, store name and barcode, date and check number, and a totals footer.
   Crops to portrait; the store name and currency are editable, and `.txt`
@@ -56,6 +57,7 @@ Everything runs client-side; nothing is uploaded.
 | Phosphor / Curvature / Scanlines / Glow | CRT tint and tube settings |
 | Datamosh | Toggle the mosh (webcam/video) |
 | Block / Smear | Motion block size; vector multiplier for a more violent smear |
+| Melt | How long blocks keep drifting after the motion that moved them stops |
 | Bleed | How readily the real frame leaks back through |
 | Auto keyframe / Drop keyframe | Snap back to a clean frame on a timer or on demand |
 

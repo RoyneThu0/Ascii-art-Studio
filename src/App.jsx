@@ -43,7 +43,8 @@ const DEFAULT_SETTINGS = {
   mosh: false,
   moshBlock: 4,
   moshSmear: 1,
-  moshBleed: 0.15,
+  moshBleed: 0.1,
+  moshMelt: 0.9,
   moshKeyframe: 0, // seconds between auto keyframes, 0 = never
   // Look: how the finished render is framed
   look: 'none', // 'none' | 'receipt' | 'crt'
@@ -108,6 +109,7 @@ export default function App() {
         block: s.moshBlock,
         smear: s.moshSmear,
         bleed: s.moshBleed,
+        melt: s.moshMelt,
         keyframe,
       })
     }
