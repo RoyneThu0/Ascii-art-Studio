@@ -1,6 +1,6 @@
 // Tunable settings for the ASCII conversion & rendering.
 export default function Controls({
-  settings, setSettings, charSets, blobModes, isLive, onKeyframe,
+  settings, setSettings, charSets, blobModes, isLive, onKeyframe, looks,
 }) {
   const set = (key) => (e) => {
     const t = e.target
@@ -25,6 +25,25 @@ export default function Controls({
           {charSets.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </Field>
+
+      <Field label="Look">
+        <select value={settings.look} onChange={set('look')}>
+          {looks.map((l) => <option key={l} value={l}>{l}</option>)}
+        </select>
+      </Field>
+
+      {settings.look === 'receipt' && (
+        <div className="row">
+          <Field label="Store name">
+            <input type="text" maxLength={24} value={settings.receiptTitle}
+              onChange={set('receiptTitle')} />
+          </Field>
+          <Field label="Currency">
+            <input type="text" maxLength={4} value={settings.receiptCurrency}
+              onChange={set('receiptCurrency')} className="short" />
+          </Field>
+        </div>
+      )}
 
       <Field label={`Brightness — ${settings.brightness.toFixed(2)}`}>
         <input type="range" min="0.2" max="2" step="0.05"

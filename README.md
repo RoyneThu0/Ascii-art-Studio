@@ -17,6 +17,10 @@ browser. Built with React + Vite.
 - **Datamosh** — the dropped-keyframe glitch: motion vectors from the live feed
   are applied to a stale frame, so the old picture smears along with the new
   motion until a keyframe snaps it back.
+- **Receipt ticket** — prints the art onto a thermal receipt: torn paper
+  edges, store name and barcode, date and check number, and a totals footer.
+  Crops to portrait; the store name and currency are editable, and `.txt`
+  exports get a plain-text receipt too.
 
 Everything runs client-side; nothing is uploaded.
 
@@ -37,6 +41,8 @@ Everything runs client-side; nothing is uploaded.
 | Min size | Smallest blob kept, as % of the frame |
 | Max blobs | Cap on tracked blobs (largest first) |
 | Links / Box | Toggle connecting lines; overlay color |
+| Look | `none` or `receipt` (thermal ticket frame) |
+| Store name / Currency | Receipt header and totals |
 | Datamosh | Toggle the mosh (webcam/video) |
 | Block / Smear | Motion block size; vector multiplier for a more violent smear |
 | Bleed | How readily the real frame leaks back through |

@@ -50,10 +50,23 @@ export function imageToAscii(source, options) {
     mirror = false,
     brightness = 1,
     contrast = 1,
+    aspect = 0, // optional width/height to centre-crop the source to
   } = options
 
-  const { w: sw, h: sh } = sourceSize(source)
-  if (!sw || !sh) return null
+  const { w: fullW, h: fullH } = sourceSize(source)
+  if (!fullW || !fullH) return null
+
+  // Source rectangle: the whole frame, or a centred crop to `aspect`.
+  let sx = 0, sy = 0, sw = fullW, sh = fullH
+  if (aspect > 0) {
+    if (fullW / fullH > aspect) {
+      sw = fullH * aspect
+      sx = (fullW - sw) / 2
+    } else {
+      sh = fullW / aspect
+      sy = (fullH - sh) / 2
+    }
+  }
 
   const chars = CHAR_SETS[charSet] ?? CHAR_SETS.standard
   const rows = Math.max(1, Math.round((cols * (sh / sw)) * CHAR_ASPECT))
@@ -64,10 +77,10 @@ export function imageToAscii(source, options) {
     // Flip horizontally: translate to the right edge, then draw at -1 x-scale.
     sctx.save()
     sctx.setTransform(-1, 0, 0, 1, cols, 0)
-    sctx.drawImage(source, 0, 0, cols, rows)
+    sctx.drawImage(source, sx, sy, sw, sh, 0, 0, cols, rows)
     sctx.restore()
   } else {
-    sctx.drawImage(source, 0, 0, cols, rows)
+    sctx.drawImage(source, sx, sy, sw, sh, 0, 0, cols, rows)
   }
 
   let data

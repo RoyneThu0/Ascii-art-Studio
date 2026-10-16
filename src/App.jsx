@@ -8,6 +8,7 @@ import {
   trackBlobs,
 } from './blobTracker'
 import { createMosh, moshFrame, resetMosh } from './datamosh'
+import { INK, PAPER, drawReceipt, receiptChrome, receiptText } from './receipt'
 import Controls from './components/Controls.jsx'
 import SourcePanel from './components/SourcePanel.jsx'
 
@@ -40,7 +41,13 @@ const DEFAULT_SETTINGS = {
   moshSmear: 1,
   moshBleed: 0.15,
   moshKeyframe: 0, // seconds between auto keyframes, 0 = never
+  // Look: how the finished render is framed
+  look: 'none', // 'none' | 'receipt'
+  receiptTitle: 'ASCII MARKET',
+  receiptCurrency: '¥',
 }
+
+const LOOKS = ['none', 'receipt']
 
 export default function App() {
   const [mode, setMode] = useState('image') // 'image' | 'webcam' | 'video'
@@ -55,6 +62,7 @@ export default function App() {
   const rafRef = useRef(0)
   const trackerRef = useRef(createBlobTracker())
   const moshRef = useRef(createMosh())
+  const artCanvasRef = useRef(null) // offscreen art layer for framed looks
   const keyframeRef = useRef({ pending: false, last: 0 })
 
   const settingsRef = useRef(settings)
@@ -67,7 +75,15 @@ export default function App() {
     if (!el || !canvas) return
     const s = settingsRef.current
     // Webcam is shown mirrored, like a selfie view.
-    const raw = imageToAscii(el, { ...s, mirror: mode === 'webcam' })
+    const receipt = s.look === 'receipt'
+    const raw = imageToAscii(el, {
+      ...s,
+      mirror: mode === 'webcam',
+      // Receipts print portrait, dark ink on light paper — the glyph ramp is
+      // tuned for light-on-dark, so flip it to keep the photo positive.
+      aspect: receipt ? 4 / 5 : 0,
+      invert: receipt ? !s.invert : s.invert,
+    })
     if (!raw) return
 
     // Datamosh needs motion between frames, so it only runs on live sources.
@@ -89,8 +105,25 @@ export default function App() {
 
     // Fill the stage: glyphs are sized to the available box each frame.
     const box = stageRef.current?.getBoundingClientRect()
-    const fit = box ? { w: box.width - 28, h: box.height - 28 } : null
-    const metrics = renderToCanvas(canvas, result, { ...s, fit })
+    let fit = box ? { w: box.width - 28, h: box.height - 28 } : null
+
+    // Framed looks render the art to an offscreen layer, then compose.
+    let target = canvas
+    let renderOpts = { ...s, fit }
+    if (receipt) {
+      const chrome = receiptChrome()
+      if (fit) {
+        fit = {
+          w: Math.max(40, fit.w - chrome.padX * 2),
+          h: Math.max(40, fit.h - chrome.header - chrome.footer),
+        }
+      }
+      if (!artCanvasRef.current) artCanvasRef.current = document.createElement('canvas')
+      target = artCanvasRef.current
+      // Thermal paper: one ink, no color.
+      renderOpts = { ...s, fit, color: false, fg: INK, bg: PAPER }
+    }
+    const metrics = renderToCanvas(target, result, renderOpts)
 
     if (s.blobs) {
       const live = mode !== 'image'
@@ -106,9 +139,20 @@ export default function App() {
       drawBlobOverlay(metrics.ctx, blobs, metrics, {
         color: s.blobColor,
         links: s.blobLinks,
-        bg: s.bg,
+        bg: renderOpts.bg,
         mode: blobMode,
       })
+    }
+
+    if (receipt) {
+      const ticket = {
+        title: s.receiptTitle || 'ASCII MARKET',
+        currency: s.receiptCurrency,
+        cols: result.cols,
+        rows: result.rows,
+      }
+      drawReceipt(canvas, target, metrics, ticket)
+      lastText.current = receiptText(result.text, ticket)
     }
   }, [source, mode])
 
@@ -234,6 +278,7 @@ export default function App() {
             blobModes={BLOB_MODES}
             isLive={isLive}
             onKeyframe={dropKeyframe}
+            looks={LOOKS}
           />
           <div className="exports">
             <button onClick={copyText}>Copy text</button>
@@ -253,7 +298,7 @@ export default function App() {
 
             <canvas
               ref={canvasRef}
-              className="output"
+              className={`output look-${settings.look}`}
               style={{ display: source ? 'block' : 'none' }}
             />
 
