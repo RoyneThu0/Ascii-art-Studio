@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS = {
   cols: 140,
   charSet: 'standard',
   dither: 'off',
+  solidDither: true,
   invert: false,
   color: false,
   autoLevels: true,

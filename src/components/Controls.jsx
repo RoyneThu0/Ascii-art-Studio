@@ -8,7 +8,7 @@ export default function Controls({
       t.type === 'checkbox' ? t.checked
       : t.type === 'range' || t.type === 'number' ? Number(t.value)
       : t.value
-    setSettings((s) => ({ ...s, [key]: value }))
+    setSettings((s) => ({ ...s, [key]: value, ...linked(key, value, s) }))
   }
 
   return (
@@ -30,10 +30,14 @@ export default function Controls({
         <select value={settings.dither} onChange={set('dither')}>
           {dithers.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
-        {settings.dither !== 'off' && settings.charSet !== 'blocks' && (
-          <span className="hint">Tip: the blocks set prints solid pixels.</span>
-        )}
       </Field>
+
+      {settings.dither !== 'off' && (
+        <label className="check spaced">
+          <input type="checkbox" checked={settings.solidDither} onChange={set('solidDither')} />
+          Solid pixels
+        </label>
+      )}
 
       <Field label="Look">
         <select value={settings.look} onChange={set('look')}>
@@ -203,6 +207,16 @@ export default function Controls({
       </div>
     </div>
   )
+}
+
+// Settings that make a sensible pairing when another one changes.
+// Only fills in defaults: never overrides a choice the user already made.
+function linked(key, value, s) {
+  // Thermal receipts print best as a 1-bit halftone, like the real thing.
+  if (key === 'look' && value === 'receipt' && s.dither === 'off') {
+    return { dither: 'floyd-steinberg', solidDither: true }
+  }
+  return {}
 }
 
 function Field({ label, children }) {

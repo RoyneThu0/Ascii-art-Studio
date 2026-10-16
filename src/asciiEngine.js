@@ -179,6 +179,7 @@ export function imageToAscii(source, options) {
     dither: ditherMode = 'off',
     autoLevels = false,
     levels, // optional { lo, hi } state for smoothing auto levels on video
+    solidDither = false, // dithered cells print a full block instead of a glyph
   } = options
 
   const { w: fullW, h: fullH } = sourceSize(source)
@@ -246,13 +247,14 @@ export function imageToAscii(source, options) {
   if (dithered) dither(tone, cols, rows, ditherMode)
 
   // Tone 1 → most ink, tone 0 → blank. Dithered tones are exactly 0 or 1,
-  // so only two glyphs appear: the densest one and blank.
+  // so only two glyphs appear: the densest one (or a solid block) and blank.
   const table = inkLookup(chars)
+  const on = dithered && solidDither ? '█' : chars[0]
   for (let i = 0; i < cols * rows; i++) {
     const p = i * 4
     const t = Math.min(1, Math.max(0, tone[i]))
     const char = dithered
-      ? (t > 0.5 ? chars[0] : chars[lastIndex])
+      ? (t > 0.5 ? on : chars[lastIndex])
       : table[Math.round(t * 255)]
     cells[i] = { char, r: data[p], g: data[p + 1], b: data[p + 2] }
   }

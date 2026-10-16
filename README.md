@@ -25,8 +25,9 @@ browser. Built with React + Vite.
   scanlines, an RGB aperture grille, vignette and glare, with optional green or
   amber phosphor.
 - **1-bit dither** — quantize to fully inked or blank cells with
-  Floyd–Steinberg, Atkinson or Bayer before glyphs are picked. Pair it with
-  the `blocks` set for true pixels, or the receipt for a halftone print.
+  Floyd–Steinberg, Atkinson or Bayer before glyphs are picked. Prints solid
+  pixels by default; the receipt look switches it on automatically for a
+  thermal halftone print.
 
 Everything runs client-side; nothing is uploaded.
 
@@ -37,6 +38,7 @@ Everything runs client-side; nothing is uploaded.
 | Resolution | How many character columns wide (detail vs. size) |
 | Character set | `standard`, `detailed`, `blocks`, `binary`, `scramble`, … |
 | 1-bit dither | `off`, `floyd-steinberg`, `atkinson`, `bayer` |
+| Solid pixels | Dithered cells print a full block (on by default); off keeps the set's densest glyph |
 | Font size | Rendered glyph size |
 | Auto levels | Stretch each frame's brightness to the full range (on by default) |
 | Brightness / Contrast | Tone-map the source before mapping to glyphs |
