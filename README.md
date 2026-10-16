@@ -24,6 +24,9 @@ browser. Built with React + Vite.
 - **CRT** — behind old tube glass: barrel curvature, phosphor bloom,
   scanlines, an RGB aperture grille, vignette and glare, with optional green or
   amber phosphor.
+- **1-bit dither** — quantize to fully inked or blank cells with
+  Floyd–Steinberg, Atkinson or Bayer before glyphs are picked. Pair it with
+  the `blocks` set for true pixels, or the receipt for a halftone print.
 
 Everything runs client-side; nothing is uploaded.
 
@@ -33,6 +36,7 @@ Everything runs client-side; nothing is uploaded.
 | --- | --- |
 | Resolution | How many character columns wide (detail vs. size) |
 | Character set | `standard`, `detailed`, `blocks`, `binary`, `scramble`, … |
+| 1-bit dither | `off`, `floyd-steinberg`, `atkinson`, `bayer` |
 | Font size | Rendered glyph size |
 | Brightness / Contrast | Tone-map the source before mapping to glyphs |
 | Invert | Swap dark/light mapping (for dark vs. light backgrounds) |

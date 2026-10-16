@@ -1,6 +1,6 @@
 // Tunable settings for the ASCII conversion & rendering.
 export default function Controls({
-  settings, setSettings, charSets, blobModes, isLive, onKeyframe, looks,
+  settings, setSettings, charSets, blobModes, isLive, onKeyframe, looks, dithers,
 }) {
   const set = (key) => (e) => {
     const t = e.target
@@ -24,6 +24,15 @@ export default function Controls({
         <select value={settings.charSet} onChange={set('charSet')}>
           {charSets.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+      </Field>
+
+      <Field label="1-bit dither">
+        <select value={settings.dither} onChange={set('dither')}>
+          {dithers.map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+        {settings.dither !== 'off' && settings.charSet !== 'blocks' && (
+          <span className="hint">Tip: the blocks set prints solid pixels.</span>
+        )}
       </Field>
 
       <Field label="Look">

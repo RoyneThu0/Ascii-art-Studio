@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CHAR_SETS, imageToAscii, renderToCanvas } from './asciiEngine'
+import { CHAR_SETS, DITHERS, imageToAscii, renderToCanvas } from './asciiEngine'
 import {
   BLOB_MODES,
   createBlobTracker,
@@ -22,6 +22,7 @@ const MODES = [
 const DEFAULT_SETTINGS = {
   cols: 140,
   charSet: 'standard',
+  dither: 'off',
   invert: false,
   color: false,
   brightness: 1,
@@ -296,6 +297,7 @@ export default function App() {
             isLive={isLive}
             onKeyframe={dropKeyframe}
             looks={LOOKS}
+            dithers={DITHERS}
           />
           <div className="exports">
             <button onClick={copyText}>Copy text</button>
