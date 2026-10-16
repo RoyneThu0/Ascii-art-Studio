@@ -88,6 +88,11 @@ export default function Controls({
           value={settings.contrast} onChange={set('contrast')} />
       </Field>
 
+      <label className="check spaced">
+        <input type="checkbox" checked={settings.autoLevels} onChange={set('autoLevels')} />
+        Auto levels
+      </label>
+
       <div className="row">
         <label className="check">
           <input type="checkbox" checked={settings.invert} onChange={set('invert')} />

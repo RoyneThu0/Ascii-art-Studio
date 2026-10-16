@@ -38,6 +38,7 @@ Everything runs client-side; nothing is uploaded.
 | Character set | `standard`, `detailed`, `blocks`, `binary`, `scramble`, … |
 | 1-bit dither | `off`, `floyd-steinberg`, `atkinson`, `bayer` |
 | Font size | Rendered glyph size |
+| Auto levels | Stretch each frame's brightness to the full range (on by default) |
 | Brightness / Contrast | Tone-map the source before mapping to glyphs |
 | Invert | Swap dark/light mapping (for dark vs. light backgrounds) |
 | Color | Keep the source's per-cell color instead of a single ink color |
@@ -62,7 +63,8 @@ Export: **copy as text**, **save `.txt`**, or **save `.png`**.
 
 `src/asciiEngine.js` downsamples the source into a low-res grid via an offscreen
 canvas, computes each cell's Rec. 601 luminance, and maps brightness to a
-character from a dark→light ramp. A monospace aspect correction (`0.5`) keeps
+character by how much ink it actually puts down (each glyph's coverage is
+measured once, so mid-tones land on mid-density glyphs). A monospace aspect correction (`0.5`) keeps
 proportions. `renderToCanvas` paints the glyphs (mono or per-cell color) onto a
 display canvas, which doubles as the PNG export surface.
 

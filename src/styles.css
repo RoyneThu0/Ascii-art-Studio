@@ -146,6 +146,7 @@ input[type='color'] {
 /* Blob tracking block inside Settings */
 .subsection { margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--line); }
 .subsection-body { margin-top: 14px; }
+.check.spaced { margin-bottom: 14px; }
 .check.toggle { color: var(--accent); letter-spacing: 2px; }
 .hint { display: block; margin-top: 6px; font-size: 10px; color: var(--muted); letter-spacing: .5px; }
 .row .check { align-self: center; }

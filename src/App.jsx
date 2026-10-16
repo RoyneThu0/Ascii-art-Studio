@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS = {
   dither: 'off',
   invert: false,
   color: false,
+  autoLevels: true,
   brightness: 1,
   contrast: 1,
   fg: '#c8d0d8',
@@ -67,6 +68,7 @@ export default function App() {
   const lastText = useRef('')
   const rafRef = useRef(0)
   const trackerRef = useRef(createBlobTracker())
+  const levelsRef = useRef({}) // smoothed auto-levels limits for live sources
   const moshRef = useRef(createMosh())
   const artCanvasRef = useRef(null) // offscreen art layer for framed looks
   const keyframeRef = useRef({ pending: false, last: 0 })
@@ -85,6 +87,7 @@ export default function App() {
     const raw = imageToAscii(el, {
       ...s,
       mirror: mode === 'webcam',
+      levels: mode === 'image' ? undefined : levelsRef.current,
       // Receipts print portrait, dark ink on light paper — the glyph ramp is
       // tuned for light-on-dark, so flip it to keep the photo positive.
       aspect: receipt ? 4 / 5 : 0,
@@ -181,6 +184,10 @@ export default function App() {
   useEffect(() => {
     resetBlobTracker(trackerRef.current)
   }, [source, mode, settings.blobs, settings.blobMode])
+
+  useEffect(() => {
+    levelsRef.current = {}
+  }, [source, mode])
 
   useEffect(() => {
     resetMosh(moshRef.current)
