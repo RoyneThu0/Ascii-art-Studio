@@ -37,8 +37,10 @@ function sourceSize(source) {
 
 /**
  * Convert a source into an ASCII representation.
- * @returns {{ text, cells, cols, rows } | null}
+ * @returns {{ text, cells, lum, cols, rows } | null}
  *   cells: flat array of { char, r, g, b } in row-major order.
+ *   lum:   Float32Array of adjusted 0..1 luminance (before invert), used
+ *          by the blob tracker.
  */
 export function imageToAscii(source, options) {
   const {
@@ -77,6 +79,7 @@ export function imageToAscii(source, options) {
   }
 
   const cells = new Array(cols * rows)
+  const lumGrid = new Float32Array(cols * rows)
   const lastIndex = chars.length - 1
   const cFactor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255))
 
@@ -92,6 +95,7 @@ export function imageToAscii(source, options) {
     // Contrast around mid-gray
     lum = ((cFactor * (lum * 255 - 128) + 128) / 255)
     lum = Math.min(1, Math.max(0, lum))
+    lumGrid[i] = lum
     if (invert) lum = 1 - lum
 
     // Bright pixel → light glyph (end of ramp); dark → dense glyph (start).
@@ -106,13 +110,15 @@ export function imageToAscii(source, options) {
     text += '\n'
   }
 
-  return { text, cells, cols, rows }
+  return { text, cells, lum: lumGrid, cols, rows }
 }
 
 /**
  * Paint an ASCII result onto a display canvas.
  * @param result  output of imageToAscii
- * @param opts     { color, fg, bg, fontSize }
+ * @param opts     { color, fg, bg, fontSize, fit }
+ * @returns {{ ctx, cellW, cellH, width, height }} so overlays can be drawn
+ *   in the same coordinate space.
  */
 export function renderToCanvas(canvas, result, opts) {
   const { color = false, fg = '#c8d0d8', bg = '#12151c', fit } = opts
@@ -149,4 +155,6 @@ export function renderToCanvas(canvas, result, opts) {
       ctx.fillText(c.char, x * cellW, y * cellH)
     }
   }
+
+  return { ctx, cellW, cellH, width: cols * cellW, height: rows * cellH }
 }

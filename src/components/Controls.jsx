@@ -1,5 +1,5 @@
 // Tunable settings for the ASCII conversion & rendering.
-export default function Controls({ settings, setSettings, charSets }) {
+export default function Controls({ settings, setSettings, charSets, blobModes, isLive }) {
   const set = (key) => (e) => {
     const t = e.target
     const value =
@@ -53,6 +53,55 @@ export default function Controls({ settings, setSettings, charSets }) {
         <Field label="Background">
           <input type="color" value={settings.bg} onChange={set('bg')} />
         </Field>
+      </div>
+
+      <div className="subsection">
+        <label className="check toggle">
+          <input type="checkbox" checked={settings.blobs} onChange={set('blobs')} />
+          Blob tracking
+        </label>
+
+        {settings.blobs && (
+          <div className="subsection-body">
+            <Field label="Detect">
+              <select value={settings.blobMode} onChange={set('blobMode')}>
+                {blobModes.map((m) => (
+                  <option key={m} value={m} disabled={m === 'motion' && !isLive}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+              {!isLive && settings.blobMode === 'motion' && (
+                <span className="hint">Motion needs webcam or video — using bright.</span>
+              )}
+            </Field>
+
+            <Field label={`Sensitivity — ${settings.blobSensitivity.toFixed(2)}`}>
+              <input type="range" min="0.05" max="1" step="0.05"
+                value={settings.blobSensitivity} onChange={set('blobSensitivity')} />
+            </Field>
+
+            <Field label={`Min size — ${settings.blobMinSize.toFixed(1)}% of frame`}>
+              <input type="range" min="0.1" max="10" step="0.1"
+                value={settings.blobMinSize} onChange={set('blobMinSize')} />
+            </Field>
+
+            <Field label={`Max blobs — ${settings.blobMax}`}>
+              <input type="range" min="1" max="16" step="1"
+                value={settings.blobMax} onChange={set('blobMax')} />
+            </Field>
+
+            <div className="row">
+              <label className="check">
+                <input type="checkbox" checked={settings.blobLinks} onChange={set('blobLinks')} />
+                Links
+              </label>
+              <Field label="Box">
+                <input type="color" value={settings.blobColor} onChange={set('blobColor')} />
+              </Field>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
