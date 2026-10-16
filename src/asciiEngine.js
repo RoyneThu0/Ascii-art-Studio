@@ -94,7 +94,6 @@ export function imageToAscii(source, options) {
   const cells = new Array(cols * rows)
   const lumGrid = new Float32Array(cols * rows)
   const lastIndex = chars.length - 1
-  const cFactor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255))
 
   for (let i = 0; i < cols * rows; i++) {
     const p = i * 4
@@ -105,8 +104,8 @@ export function imageToAscii(source, options) {
     // Perceptual luminance (Rec. 601), 0..1
     let lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
     lum *= brightness
-    // Contrast around mid-gray
-    lum = ((cFactor * (lum * 255 - 128) + 128) / 255)
+    // Contrast as a multiplier around mid-gray (1 = unchanged).
+    lum = (lum - 0.5) * contrast + 0.5
     lum = Math.min(1, Math.max(0, lum))
     lumGrid[i] = lum
     if (invert) lum = 1 - lum
