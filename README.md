@@ -21,6 +21,9 @@ browser. Built with React + Vite.
   edges, store name and barcode, date and check number, and a totals footer.
   Crops to portrait; the store name and currency are editable, and `.txt`
   exports get a plain-text receipt too.
+- **CRT** — behind old tube glass: barrel curvature, phosphor bloom,
+  scanlines, an RGB aperture grille, vignette and glare, with optional green or
+  amber phosphor.
 
 Everything runs client-side; nothing is uploaded.
 
@@ -41,8 +44,9 @@ Everything runs client-side; nothing is uploaded.
 | Min size | Smallest blob kept, as % of the frame |
 | Max blobs | Cap on tracked blobs (largest first) |
 | Links / Box | Toggle connecting lines; overlay color |
-| Look | `none` or `receipt` (thermal ticket frame) |
+| Look | `none`, `receipt` (thermal ticket) or `crt` (tube screen) |
 | Store name / Currency | Receipt header and totals |
+| Phosphor / Curvature / Scanlines / Glow | CRT tint and tube settings |
 | Datamosh | Toggle the mosh (webcam/video) |
 | Block / Smear | Motion block size; vector multiplier for a more violent smear |
 | Bleed | How readily the real frame leaks back through |

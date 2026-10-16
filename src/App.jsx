@@ -9,6 +9,7 @@ import {
 } from './blobTracker'
 import { createMosh, moshFrame, resetMosh } from './datamosh'
 import { INK, PAPER, drawReceipt, receiptChrome, receiptText } from './receipt'
+import { PHOSPHORS, drawCRT } from './crt'
 import Controls from './components/Controls.jsx'
 import SourcePanel from './components/SourcePanel.jsx'
 
@@ -42,12 +43,16 @@ const DEFAULT_SETTINGS = {
   moshBleed: 0.15,
   moshKeyframe: 0, // seconds between auto keyframes, 0 = never
   // Look: how the finished render is framed
-  look: 'none', // 'none' | 'receipt'
+  look: 'none', // 'none' | 'receipt' | 'crt'
   receiptTitle: 'ASCII MARKET',
   receiptCurrency: '¥',
+  crtCurve: 0.12,
+  crtScanlines: 0.5,
+  crtGlow: 0.5,
+  crtPhosphor: 'off', // 'off' | 'green' | 'amber'
 }
 
-const LOOKS = ['none', 'receipt']
+const LOOKS = ['none', 'receipt', 'crt']
 
 export default function App() {
   const [mode, setMode] = useState('image') // 'image' | 'webcam' | 'video'
@@ -122,6 +127,11 @@ export default function App() {
       target = artCanvasRef.current
       // Thermal paper: one ink, no color.
       renderOpts = { ...s, fit, color: false, fg: INK, bg: PAPER }
+    } else if (s.look === 'crt') {
+      if (!artCanvasRef.current) artCanvasRef.current = document.createElement('canvas')
+      target = artCanvasRef.current
+      const tint = PHOSPHORS[s.crtPhosphor]
+      if (tint) renderOpts = { ...s, fit, color: false, fg: tint.fg, bg: tint.bg }
     }
     const metrics = renderToCanvas(target, result, renderOpts)
 
@@ -153,6 +163,13 @@ export default function App() {
       }
       drawReceipt(canvas, target, metrics, ticket)
       lastText.current = receiptText(result.text, ticket)
+    } else if (s.look === 'crt') {
+      drawCRT(canvas, target, {
+        curve: s.crtCurve,
+        scanlines: s.crtScanlines,
+        glow: s.crtGlow,
+        flicker: mode !== 'image',
+      })
     }
   }, [source, mode])
 

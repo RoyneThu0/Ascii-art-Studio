@@ -45,6 +45,30 @@ export default function Controls({
         </div>
       )}
 
+      {settings.look === 'crt' && (
+        <>
+          <Field label="Phosphor">
+            <select value={settings.crtPhosphor} onChange={set('crtPhosphor')}>
+              <option value="off">off (use colors below)</option>
+              <option value="green">green</option>
+              <option value="amber">amber</option>
+            </select>
+          </Field>
+          <Field label={`Curvature — ${settings.crtCurve.toFixed(2)}`}>
+            <input type="range" min="0" max="0.3" step="0.01"
+              value={settings.crtCurve} onChange={set('crtCurve')} />
+          </Field>
+          <Field label={`Scanlines — ${settings.crtScanlines.toFixed(2)}`}>
+            <input type="range" min="0" max="1" step="0.05"
+              value={settings.crtScanlines} onChange={set('crtScanlines')} />
+          </Field>
+          <Field label={`Glow — ${settings.crtGlow.toFixed(2)}`}>
+            <input type="range" min="0" max="1" step="0.05"
+              value={settings.crtGlow} onChange={set('crtGlow')} />
+          </Field>
+        </>
+      )}
+
       <Field label={`Brightness — ${settings.brightness.toFixed(2)}`}>
         <input type="range" min="0.2" max="2" step="0.05"
           value={settings.brightness} onChange={set('brightness')} />

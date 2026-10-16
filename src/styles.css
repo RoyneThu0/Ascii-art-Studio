@@ -189,6 +189,7 @@ button.ghost:disabled { opacity: .4; cursor: default; }
 
 /* Receipt: the canvas has transparent torn edges, so shadow the paper
    shape rather than the rectangle. */
+.output.look-crt { box-shadow: 0 0 0 10px #0b0a08, 0 0 0 11px var(--line), 0 14px 44px rgba(0,0,0,.6); }
 .output.look-receipt { box-shadow: none; filter: drop-shadow(0 14px 28px rgba(0,0,0,.55)); }
 
 /* Centered source picker (empty state) */
