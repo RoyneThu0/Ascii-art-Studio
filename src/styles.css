@@ -141,6 +141,15 @@ input[type='color'] {
 .check.toggle { color: var(--accent); letter-spacing: 2px; }
 .hint { display: block; margin-top: 6px; font-size: 10px; color: var(--muted); letter-spacing: .5px; }
 .row .check { align-self: center; }
+.hint.first { margin: 0 0 14px; }
+button.ghost {
+  width: 100%; padding: 9px 12px; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--accent); background: transparent; color: var(--accent);
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+  transition: background .15s, color .15s;
+}
+button.ghost:hover:not(:disabled) { background: var(--accent); color: #14110c; }
+button.ghost:disabled { opacity: .4; cursor: default; }
 
 .exports { display: flex; gap: 8px; }
 .exports button { flex: 1; padding: 10px 6px; }

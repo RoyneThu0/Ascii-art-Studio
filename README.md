@@ -14,6 +14,9 @@ browser. Built with React + Vite.
   with persistent IDs, drawn as a technical overlay (boxes, corner brackets,
   centroid tags, nearest-neighbour links). It's baked into photos and `.png`
   exports.
+- **Datamosh** — the dropped-keyframe glitch: motion vectors from the live feed
+  are applied to a stale frame, so the old picture smears along with the new
+  motion until a keyframe snaps it back.
 
 Everything runs client-side; nothing is uploaded.
 
@@ -34,6 +37,10 @@ Everything runs client-side; nothing is uploaded.
 | Min size | Smallest blob kept, as % of the frame |
 | Max blobs | Cap on tracked blobs (largest first) |
 | Links / Box | Toggle connecting lines; overlay color |
+| Datamosh | Toggle the mosh (webcam/video) |
+| Block / Smear | Motion block size; vector multiplier for a more violent smear |
+| Bleed | How readily the real frame leaks back through |
+| Auto keyframe / Drop keyframe | Snap back to a clean frame on a timer or on demand |
 
 Export: **copy as text**, **save `.txt`**, or **save `.png`**.
 

@@ -7,6 +7,7 @@ import {
   resetBlobTracker,
   trackBlobs,
 } from './blobTracker'
+import { createMosh, moshFrame, resetMosh } from './datamosh'
 import Controls from './components/Controls.jsx'
 import SourcePanel from './components/SourcePanel.jsx'
 
@@ -33,6 +34,12 @@ const DEFAULT_SETTINGS = {
   blobMax: 6,
   blobLinks: true,
   blobColor: '#e8481c',
+  // Datamosh
+  mosh: false,
+  moshBlock: 4,
+  moshSmear: 1,
+  moshBleed: 0.15,
+  moshKeyframe: 0, // seconds between auto keyframes, 0 = never
 }
 
 export default function App() {
@@ -47,6 +54,8 @@ export default function App() {
   const lastText = useRef('')
   const rafRef = useRef(0)
   const trackerRef = useRef(createBlobTracker())
+  const moshRef = useRef(createMosh())
+  const keyframeRef = useRef({ pending: false, last: 0 })
 
   const settingsRef = useRef(settings)
   settingsRef.current = settings
@@ -58,8 +67,24 @@ export default function App() {
     if (!el || !canvas) return
     const s = settingsRef.current
     // Webcam is shown mirrored, like a selfie view.
-    const result = imageToAscii(el, { ...s, mirror: mode === 'webcam' })
-    if (!result) return
+    const raw = imageToAscii(el, { ...s, mirror: mode === 'webcam' })
+    if (!raw) return
+
+    // Datamosh needs motion between frames, so it only runs on live sources.
+    let result = raw
+    if (s.mosh && mode !== 'image') {
+      const kf = keyframeRef.current
+      const now = performance.now()
+      const due = s.moshKeyframe > 0 && now - kf.last >= s.moshKeyframe * 1000
+      const keyframe = kf.pending || due
+      if (keyframe) { kf.pending = false; kf.last = now }
+      result = moshFrame(moshRef.current, raw, {
+        block: s.moshBlock,
+        smear: s.moshSmear,
+        bleed: s.moshBleed,
+        keyframe,
+      })
+    }
     lastText.current = result.text
 
     // Fill the stage: glyphs are sized to the available box each frame.
@@ -71,7 +96,7 @@ export default function App() {
       const live = mode !== 'image'
       // Motion needs successive frames, so stills fall back to brightness.
       const blobMode = !live && s.blobMode === 'motion' ? 'bright' : s.blobMode
-      const blobs = trackBlobs(trackerRef.current, result.lum, result.cols, result.rows, {
+      const blobs = trackBlobs(trackerRef.current, raw.lum, raw.cols, raw.rows, {
         mode: blobMode,
         sensitivity: s.blobSensitivity,
         minSize: s.blobMinSize,
@@ -94,6 +119,16 @@ export default function App() {
   useEffect(() => {
     resetBlobTracker(trackerRef.current)
   }, [source, mode, settings.blobs, settings.blobMode])
+
+  useEffect(() => {
+    resetMosh(moshRef.current)
+    keyframeRef.current.last = performance.now()
+  }, [source, mode, settings.mosh])
+
+  // Snap back to a clean frame on the next render.
+  const dropKeyframe = () => {
+    keyframeRef.current.pending = true
+  }
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current)
@@ -198,6 +233,7 @@ export default function App() {
             charSets={Object.keys(CHAR_SETS)}
             blobModes={BLOB_MODES}
             isLive={isLive}
+            onKeyframe={dropKeyframe}
           />
           <div className="exports">
             <button onClick={copyText}>Copy text</button>

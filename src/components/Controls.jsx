@@ -1,5 +1,7 @@
 // Tunable settings for the ASCII conversion & rendering.
-export default function Controls({ settings, setSettings, charSets, blobModes, isLive }) {
+export default function Controls({
+  settings, setSettings, charSets, blobModes, isLive, onKeyframe,
+}) {
   const set = (key) => (e) => {
     const t = e.target
     const value =
@@ -100,6 +102,45 @@ export default function Controls({ settings, setSettings, charSets, blobModes, i
                 <input type="color" value={settings.blobColor} onChange={set('blobColor')} />
               </Field>
             </div>
+          </div>
+        )}
+      </div>
+
+      <div className="subsection">
+        <label className="check toggle">
+          <input type="checkbox" checked={settings.mosh} onChange={set('mosh')} />
+          Datamosh
+        </label>
+
+        {settings.mosh && (
+          <div className="subsection-body">
+            {!isLive && (
+              <span className="hint first">Needs motion — switch to webcam or video.</span>
+            )}
+
+            <Field label={`Block — ${settings.moshBlock} cells`}>
+              <input type="range" min="2" max="8" step="1"
+                value={settings.moshBlock} onChange={set('moshBlock')} />
+            </Field>
+
+            <Field label={`Smear — ${settings.moshSmear.toFixed(1)}×`}>
+              <input type="range" min="1" max="3" step="0.5"
+                value={settings.moshSmear} onChange={set('moshSmear')} />
+            </Field>
+
+            <Field label={`Bleed — ${settings.moshBleed.toFixed(2)}`}>
+              <input type="range" min="0" max="1" step="0.05"
+                value={settings.moshBleed} onChange={set('moshBleed')} />
+            </Field>
+
+            <Field label={`Auto keyframe — ${settings.moshKeyframe ? settings.moshKeyframe + 's' : 'off'}`}>
+              <input type="range" min="0" max="10" step="1"
+                value={settings.moshKeyframe} onChange={set('moshKeyframe')} />
+            </Field>
+
+            <button type="button" className="ghost" onClick={onKeyframe} disabled={!isLive}>
+              Drop keyframe
+            </button>
           </div>
         )}
       </div>
