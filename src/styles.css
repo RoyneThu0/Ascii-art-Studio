@@ -135,6 +135,13 @@ input[type='color'] {
 .check { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
 .check input { accent-color: var(--accent); }
 
+/* Blob tracking block inside Settings */
+.subsection { margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--line); }
+.subsection-body { margin-top: 14px; }
+.check.toggle { color: var(--accent); letter-spacing: 2px; }
+.hint { display: block; margin-top: 6px; font-size: 10px; color: var(--muted); letter-spacing: .5px; }
+.row .check { align-self: center; }
+
 .exports { display: flex; gap: 8px; }
 .exports button { flex: 1; padding: 10px 6px; }
 

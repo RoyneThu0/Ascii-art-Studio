@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CHAR_SETS, imageToAscii, renderToCanvas } from './asciiEngine'
+import {
+  BLOB_MODES,
+  createBlobTracker,
+  drawBlobOverlay,
+  resetBlobTracker,
+  trackBlobs,
+} from './blobTracker'
 import Controls from './components/Controls.jsx'
 import SourcePanel from './components/SourcePanel.jsx'
 
@@ -18,6 +25,14 @@ const DEFAULT_SETTINGS = {
   contrast: 1,
   fg: '#c8d0d8',
   bg: '#12151c',
+  // Blob tracking overlay
+  blobs: false,
+  blobMode: 'motion',
+  blobSensitivity: 0.5,
+  blobMinSize: 0.5, // % of frame area
+  blobMax: 6,
+  blobLinks: true,
+  blobColor: '#e8481c',
 }
 
 export default function App() {
@@ -31,6 +46,7 @@ export default function App() {
   const stageRef = useRef(null)
   const lastText = useRef('')
   const rafRef = useRef(0)
+  const trackerRef = useRef(createBlobTracker())
 
   const settingsRef = useRef(settings)
   settingsRef.current = settings
@@ -49,11 +65,35 @@ export default function App() {
     // Fill the stage: glyphs are sized to the available box each frame.
     const box = stageRef.current?.getBoundingClientRect()
     const fit = box ? { w: box.width - 28, h: box.height - 28 } : null
-    renderToCanvas(canvas, result, { ...s, fit })
+    const metrics = renderToCanvas(canvas, result, { ...s, fit })
+
+    if (s.blobs) {
+      const live = mode !== 'image'
+      // Motion needs successive frames, so stills fall back to brightness.
+      const blobMode = !live && s.blobMode === 'motion' ? 'bright' : s.blobMode
+      const blobs = trackBlobs(trackerRef.current, result.lum, result.cols, result.rows, {
+        mode: blobMode,
+        sensitivity: s.blobSensitivity,
+        minSize: s.blobMinSize,
+        maxBlobs: s.blobMax,
+        persist: live,
+      })
+      drawBlobOverlay(metrics.ctx, blobs, metrics, {
+        color: s.blobColor,
+        links: s.blobLinks,
+        bg: s.bg,
+        mode: blobMode,
+      })
+    }
   }, [source, mode])
 
   // Static sources (image) render on demand; live sources loop.
   const isLive = mode === 'webcam' || mode === 'video'
+
+  // Fresh tracks (and motion background) whenever the input or detector changes.
+  useEffect(() => {
+    resetBlobTracker(trackerRef.current)
+  }, [source, mode, settings.blobs, settings.blobMode])
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current)
@@ -156,6 +196,8 @@ export default function App() {
             settings={settings}
             setSettings={setSettings}
             charSets={Object.keys(CHAR_SETS)}
+            blobModes={BLOB_MODES}
+            isLive={isLive}
           />
           <div className="exports">
             <button onClick={copyText}>Copy text</button>
