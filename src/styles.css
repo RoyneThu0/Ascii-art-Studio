@@ -125,6 +125,14 @@ select {
   background: var(--panel); color: var(--text); border: 1px solid var(--line);
   font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
 }
+input[type='text'] {
+  width: 100%; padding: 8px; border-radius: 3px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--line);
+  font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+}
+input[type='text']:focus, select:focus { outline: 1px solid var(--accent); outline-offset: -1px; }
+.row > .field:has(.short) { flex: 0 0 72px; }
+
 input[type='color'] {
   width: 100%; height: 34px; padding: 2px; border-radius: 3px;
   background: var(--panel); border: 1px solid var(--line); cursor: pointer;
@@ -138,9 +146,19 @@ input[type='color'] {
 /* Blob tracking block inside Settings */
 .subsection { margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--line); }
 .subsection-body { margin-top: 14px; }
+.check.spaced { margin-bottom: 14px; }
 .check.toggle { color: var(--accent); letter-spacing: 2px; }
 .hint { display: block; margin-top: 6px; font-size: 10px; color: var(--muted); letter-spacing: .5px; }
 .row .check { align-self: center; }
+.hint.first { margin: 0 0 14px; }
+button.ghost {
+  width: 100%; padding: 9px 12px; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--accent); background: transparent; color: var(--accent);
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+  transition: background .15s, color .15s;
+}
+button.ghost:hover:not(:disabled) { background: var(--accent); color: #14110c; }
+button.ghost:disabled { opacity: .4; cursor: default; }
 
 .exports { display: flex; gap: 8px; }
 .exports button { flex: 1; padding: 10px 6px; }
@@ -169,6 +187,11 @@ input[type='color'] {
   max-width: none;
   box-shadow: 0 10px 44px rgba(0,0,0,.5);
 }
+
+/* Receipt: the canvas has transparent torn edges, so shadow the paper
+   shape rather than the rectangle. */
+.output.look-crt { box-shadow: 0 0 0 10px #0b0a08, 0 0 0 11px var(--line), 0 14px 44px rgba(0,0,0,.6); }
+.output.look-receipt { box-shadow: none; filter: drop-shadow(0 14px 28px rgba(0,0,0,.55)); }
 
 /* Centered source picker (empty state) */
 .stage-source { align-items: center; justify-content: center; z-index: 2; }

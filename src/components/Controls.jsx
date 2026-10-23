@@ -1,12 +1,14 @@
 // Tunable settings for the ASCII conversion & rendering.
-export default function Controls({ settings, setSettings, charSets, blobModes, isLive }) {
+export default function Controls({
+  settings, setSettings, charSets, blobModes, isLive, onKeyframe, looks, dithers,
+}) {
   const set = (key) => (e) => {
     const t = e.target
     const value =
       t.type === 'checkbox' ? t.checked
       : t.type === 'range' || t.type === 'number' ? Number(t.value)
       : t.value
-    setSettings((s) => ({ ...s, [key]: value }))
+    setSettings((s) => ({ ...s, [key]: value, ...linked(key, value, s) }))
   }
 
   return (
@@ -24,6 +26,62 @@ export default function Controls({ settings, setSettings, charSets, blobModes, i
         </select>
       </Field>
 
+      <Field label="1-bit dither">
+        <select value={settings.dither} onChange={set('dither')}>
+          {dithers.map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+      </Field>
+
+      {settings.dither !== 'off' && (
+        <label className="check spaced">
+          <input type="checkbox" checked={settings.solidDither} onChange={set('solidDither')} />
+          Solid pixels
+        </label>
+      )}
+
+      <Field label="Look">
+        <select value={settings.look} onChange={set('look')}>
+          {looks.map((l) => <option key={l} value={l}>{l}</option>)}
+        </select>
+      </Field>
+
+      {settings.look === 'receipt' && (
+        <div className="row">
+          <Field label="Store name">
+            <input type="text" maxLength={24} value={settings.receiptTitle}
+              onChange={set('receiptTitle')} />
+          </Field>
+          <Field label="Currency">
+            <input type="text" maxLength={4} value={settings.receiptCurrency}
+              onChange={set('receiptCurrency')} className="short" />
+          </Field>
+        </div>
+      )}
+
+      {settings.look === 'crt' && (
+        <>
+          <Field label="Phosphor">
+            <select value={settings.crtPhosphor} onChange={set('crtPhosphor')}>
+              <option value="off">off (use colors below)</option>
+              <option value="green">green</option>
+              <option value="amber">amber</option>
+            </select>
+          </Field>
+          <Field label={`Curvature — ${settings.crtCurve.toFixed(2)}`}>
+            <input type="range" min="0" max="0.3" step="0.01"
+              value={settings.crtCurve} onChange={set('crtCurve')} />
+          </Field>
+          <Field label={`Scanlines — ${settings.crtScanlines.toFixed(2)}`}>
+            <input type="range" min="0" max="1" step="0.05"
+              value={settings.crtScanlines} onChange={set('crtScanlines')} />
+          </Field>
+          <Field label={`Glow — ${settings.crtGlow.toFixed(2)}`}>
+            <input type="range" min="0" max="1" step="0.05"
+              value={settings.crtGlow} onChange={set('crtGlow')} />
+          </Field>
+        </>
+      )}
+
       <Field label={`Brightness — ${settings.brightness.toFixed(2)}`}>
         <input type="range" min="0.2" max="2" step="0.05"
           value={settings.brightness} onChange={set('brightness')} />
@@ -33,6 +91,11 @@ export default function Controls({ settings, setSettings, charSets, blobModes, i
         <input type="range" min="0.2" max="3" step="0.05"
           value={settings.contrast} onChange={set('contrast')} />
       </Field>
+
+      <label className="check spaced">
+        <input type="checkbox" checked={settings.autoLevels} onChange={set('autoLevels')} />
+        Auto levels
+      </label>
 
       <div className="row">
         <label className="check">
@@ -103,8 +166,65 @@ export default function Controls({ settings, setSettings, charSets, blobModes, i
           </div>
         )}
       </div>
+
+      <div className="subsection">
+        <label className="check toggle">
+          <input type="checkbox" checked={settings.mosh} onChange={set('mosh')} />
+          Datamosh
+        </label>
+
+        {settings.mosh && (
+          <div className="subsection-body">
+            {!isLive && (
+              <span className="hint first">Needs motion — switch to webcam or video.</span>
+            )}
+
+            <Field label={`Block — ${settings.moshBlock} cells`}>
+              <input type="range" min="2" max="8" step="1"
+                value={settings.moshBlock} onChange={set('moshBlock')} />
+            </Field>
+
+            <Field label={`Smear — ${settings.moshSmear.toFixed(1)}×`}>
+              <input type="range" min="1" max="3" step="0.5"
+                value={settings.moshSmear} onChange={set('moshSmear')} />
+            </Field>
+
+            <Field label={`Melt — ${settings.moshMelt.toFixed(2)}`}>
+              <input type="range" min="0" max="0.98" step="0.02"
+                value={settings.moshMelt} onChange={set('moshMelt')} />
+            </Field>
+
+            <Field label={`Bleed — ${settings.moshBleed.toFixed(2)}`}>
+              <input type="range" min="0" max="1" step="0.05"
+                value={settings.moshBleed} onChange={set('moshBleed')} />
+            </Field>
+
+            <Field label={`Auto keyframe — ${settings.moshKeyframe ? settings.moshKeyframe + 's' : 'off'}`}>
+              <input type="range" min="0" max="10" step="1"
+                value={settings.moshKeyframe} onChange={set('moshKeyframe')} />
+            </Field>
+
+            <button type="button" className="ghost" onClick={onKeyframe} disabled={!isLive}>
+              Drop keyframe
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
+}
+
+// Settings that make a sensible pairing when another one changes.
+// Only fills in defaults: never overrides a choice the user already made.
+function linked(key, value, s) {
+  // Thermal receipts print best as a 1-bit halftone, like the real thing.
+  if (key === 'look' && value === 'receipt' && s.dither === 'off') {
+    return { dither: 'floyd-steinberg', solidDither: true }
+  }
+  // Datamosh reads as a glitch mostly through colour: smeared skin over
+  // background, streaks of the old scene's palette.
+  if (key === 'mosh' && value) return { color: true }
+  return {}
 }
 
 function Field({ label, children }) {

@@ -14,6 +14,21 @@ browser. Built with React + Vite.
   with persistent IDs, drawn as a technical overlay (boxes, corner brackets,
   centroid tags, nearest-neighbour links). It's baked into photos and `.png`
   exports.
+- **Datamosh** — the dropped-keyframe glitch: motion vectors from the live feed
+  are applied to a stale frame, so the old picture smears along with the new
+  motion and keeps melting after it, until a keyframe snaps it back. Turns
+  colour on when enabled, since the glitch reads mostly through colour.
+- **Receipt ticket** — prints the art onto a thermal receipt: torn paper
+  edges, store name and barcode, date and check number, and a totals footer.
+  Crops to portrait; the store name and currency are editable, and `.txt`
+  exports get a plain-text receipt too.
+- **CRT** — behind old tube glass: barrel curvature, phosphor bloom,
+  scanlines, an RGB aperture grille, vignette and glare, with optional green or
+  amber phosphor.
+- **1-bit dither** — quantize to fully inked or blank cells with
+  Floyd–Steinberg, Atkinson or Bayer before glyphs are picked. Prints solid
+  pixels by default; the receipt look switches it on automatically for a
+  thermal halftone print.
 
 Everything runs client-side; nothing is uploaded.
 
@@ -23,7 +38,10 @@ Everything runs client-side; nothing is uploaded.
 | --- | --- |
 | Resolution | How many character columns wide (detail vs. size) |
 | Character set | `standard`, `detailed`, `blocks`, `binary`, `scramble`, … |
+| 1-bit dither | `off`, `floyd-steinberg`, `atkinson`, `bayer` |
+| Solid pixels | Dithered cells print a full block (on by default); off keeps the set's densest glyph |
 | Font size | Rendered glyph size |
+| Auto levels | Stretch each frame's brightness to the full range (on by default) |
 | Brightness / Contrast | Tone-map the source before mapping to glyphs |
 | Invert | Swap dark/light mapping (for dark vs. light backgrounds) |
 | Color | Keep the source's per-cell color instead of a single ink color |
@@ -34,6 +52,14 @@ Everything runs client-side; nothing is uploaded.
 | Min size | Smallest blob kept, as % of the frame |
 | Max blobs | Cap on tracked blobs (largest first) |
 | Links / Box | Toggle connecting lines; overlay color |
+| Look | `none`, `receipt` (thermal ticket) or `crt` (tube screen) |
+| Store name / Currency | Receipt header and totals |
+| Phosphor / Curvature / Scanlines / Glow | CRT tint and tube settings |
+| Datamosh | Toggle the mosh (webcam/video) |
+| Block / Smear | Motion block size; vector multiplier for a more violent smear |
+| Melt | How long blocks keep drifting after the motion that moved them stops |
+| Bleed | How readily the real frame leaks back through |
+| Auto keyframe / Drop keyframe | Snap back to a clean frame on a timer or on demand |
 
 Export: **copy as text**, **save `.txt`**, or **save `.png`**.
 
@@ -41,7 +67,8 @@ Export: **copy as text**, **save `.txt`**, or **save `.png`**.
 
 `src/asciiEngine.js` downsamples the source into a low-res grid via an offscreen
 canvas, computes each cell's Rec. 601 luminance, and maps brightness to a
-character from a dark→light ramp. A monospace aspect correction (`0.5`) keeps
+character by how much ink it actually puts down (each glyph's coverage is
+measured once, so mid-tones land on mid-density glyphs). A monospace aspect correction (`0.5`) keeps
 proportions. `renderToCanvas` paints the glyphs (mono or per-cell color) onto a
 display canvas, which doubles as the PNG export surface.
 

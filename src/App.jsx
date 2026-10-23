@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CHAR_SETS, imageToAscii, renderToCanvas } from './asciiEngine'
+import { CHAR_SETS, DITHERS, imageToAscii, renderToCanvas } from './asciiEngine'
 import {
   BLOB_MODES,
   createBlobTracker,
@@ -7,6 +7,9 @@ import {
   resetBlobTracker,
   trackBlobs,
 } from './blobTracker'
+import { createMosh, moshFrame, resetMosh } from './datamosh'
+import { INK, PAPER, drawReceipt, receiptChrome, receiptText } from './receipt'
+import { PHOSPHORS, drawCRT } from './crt'
 import Controls from './components/Controls.jsx'
 import SourcePanel from './components/SourcePanel.jsx'
 
@@ -19,8 +22,11 @@ const MODES = [
 const DEFAULT_SETTINGS = {
   cols: 140,
   charSet: 'standard',
+  dither: 'off',
+  solidDither: true,
   invert: false,
   color: false,
+  autoLevels: true,
   brightness: 1,
   contrast: 1,
   fg: '#c8d0d8',
@@ -33,7 +39,24 @@ const DEFAULT_SETTINGS = {
   blobMax: 6,
   blobLinks: true,
   blobColor: '#e8481c',
+  // Datamosh
+  mosh: false,
+  moshBlock: 4,
+  moshSmear: 1,
+  moshBleed: 0.1,
+  moshMelt: 0.9,
+  moshKeyframe: 0, // seconds between auto keyframes, 0 = never
+  // Look: how the finished render is framed
+  look: 'none', // 'none' | 'receipt' | 'crt'
+  receiptTitle: 'ASCII MARKET',
+  receiptCurrency: '¥',
+  crtCurve: 0.12,
+  crtScanlines: 0.5,
+  crtGlow: 0.5,
+  crtPhosphor: 'off', // 'off' | 'green' | 'amber'
 }
+
+const LOOKS = ['none', 'receipt', 'crt']
 
 export default function App() {
   const [mode, setMode] = useState('image') // 'image' | 'webcam' | 'video'
@@ -47,6 +70,10 @@ export default function App() {
   const lastText = useRef('')
   const rafRef = useRef(0)
   const trackerRef = useRef(createBlobTracker())
+  const levelsRef = useRef({}) // smoothed auto-levels limits for live sources
+  const moshRef = useRef(createMosh())
+  const artCanvasRef = useRef(null) // offscreen art layer for framed looks
+  const keyframeRef = useRef({ pending: false, last: 0 })
 
   const settingsRef = useRef(settings)
   settingsRef.current = settings
@@ -58,20 +85,68 @@ export default function App() {
     if (!el || !canvas) return
     const s = settingsRef.current
     // Webcam is shown mirrored, like a selfie view.
-    const result = imageToAscii(el, { ...s, mirror: mode === 'webcam' })
-    if (!result) return
+    const receipt = s.look === 'receipt'
+    const raw = imageToAscii(el, {
+      ...s,
+      mirror: mode === 'webcam',
+      levels: mode === 'image' ? undefined : levelsRef.current,
+      // Receipts print portrait, dark ink on light paper — the glyph ramp is
+      // tuned for light-on-dark, so flip it to keep the photo positive.
+      aspect: receipt ? 4 / 5 : 0,
+      invert: receipt ? !s.invert : s.invert,
+    })
+    if (!raw) return
+
+    // Datamosh needs motion between frames, so it only runs on live sources.
+    let result = raw
+    if (s.mosh && mode !== 'image') {
+      const kf = keyframeRef.current
+      const now = performance.now()
+      const due = s.moshKeyframe > 0 && now - kf.last >= s.moshKeyframe * 1000
+      const keyframe = kf.pending || due
+      if (keyframe) { kf.pending = false; kf.last = now }
+      result = moshFrame(moshRef.current, raw, {
+        block: s.moshBlock,
+        smear: s.moshSmear,
+        bleed: s.moshBleed,
+        melt: s.moshMelt,
+        keyframe,
+      })
+    }
     lastText.current = result.text
 
     // Fill the stage: glyphs are sized to the available box each frame.
     const box = stageRef.current?.getBoundingClientRect()
-    const fit = box ? { w: box.width - 28, h: box.height - 28 } : null
-    const metrics = renderToCanvas(canvas, result, { ...s, fit })
+    let fit = box ? { w: box.width - 28, h: box.height - 28 } : null
+
+    // Framed looks render the art to an offscreen layer, then compose.
+    let target = canvas
+    let renderOpts = { ...s, fit }
+    if (receipt) {
+      const chrome = receiptChrome()
+      if (fit) {
+        fit = {
+          w: Math.max(40, fit.w - chrome.padX * 2),
+          h: Math.max(40, fit.h - chrome.header - chrome.footer),
+        }
+      }
+      if (!artCanvasRef.current) artCanvasRef.current = document.createElement('canvas')
+      target = artCanvasRef.current
+      // Thermal paper: one ink, no color.
+      renderOpts = { ...s, fit, color: false, fg: INK, bg: PAPER }
+    } else if (s.look === 'crt') {
+      if (!artCanvasRef.current) artCanvasRef.current = document.createElement('canvas')
+      target = artCanvasRef.current
+      const tint = PHOSPHORS[s.crtPhosphor]
+      if (tint) renderOpts = { ...s, fit, color: false, fg: tint.fg, bg: tint.bg }
+    }
+    const metrics = renderToCanvas(target, result, renderOpts)
 
     if (s.blobs) {
       const live = mode !== 'image'
       // Motion needs successive frames, so stills fall back to brightness.
       const blobMode = !live && s.blobMode === 'motion' ? 'bright' : s.blobMode
-      const blobs = trackBlobs(trackerRef.current, result.lum, result.cols, result.rows, {
+      const blobs = trackBlobs(trackerRef.current, raw.lum, raw.cols, raw.rows, {
         mode: blobMode,
         sensitivity: s.blobSensitivity,
         minSize: s.blobMinSize,
@@ -81,8 +156,26 @@ export default function App() {
       drawBlobOverlay(metrics.ctx, blobs, metrics, {
         color: s.blobColor,
         links: s.blobLinks,
-        bg: s.bg,
+        bg: renderOpts.bg,
         mode: blobMode,
+      })
+    }
+
+    if (receipt) {
+      const ticket = {
+        title: s.receiptTitle || 'ASCII MARKET',
+        currency: s.receiptCurrency,
+        cols: result.cols,
+        rows: result.rows,
+      }
+      drawReceipt(canvas, target, metrics, ticket)
+      lastText.current = receiptText(result.text, ticket)
+    } else if (s.look === 'crt') {
+      drawCRT(canvas, target, {
+        curve: s.crtCurve,
+        scanlines: s.crtScanlines,
+        glow: s.crtGlow,
+        flicker: mode !== 'image',
       })
     }
   }, [source, mode])
@@ -94,6 +187,20 @@ export default function App() {
   useEffect(() => {
     resetBlobTracker(trackerRef.current)
   }, [source, mode, settings.blobs, settings.blobMode])
+
+  useEffect(() => {
+    levelsRef.current = {}
+  }, [source, mode])
+
+  useEffect(() => {
+    resetMosh(moshRef.current)
+    keyframeRef.current.last = performance.now()
+  }, [source, mode, settings.mosh])
+
+  // Snap back to a clean frame on the next render.
+  const dropKeyframe = () => {
+    keyframeRef.current.pending = true
+  }
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current)
@@ -198,6 +305,9 @@ export default function App() {
             charSets={Object.keys(CHAR_SETS)}
             blobModes={BLOB_MODES}
             isLive={isLive}
+            onKeyframe={dropKeyframe}
+            looks={LOOKS}
+            dithers={DITHERS}
           />
           <div className="exports">
             <button onClick={copyText}>Copy text</button>
@@ -217,7 +327,7 @@ export default function App() {
 
             <canvas
               ref={canvasRef}
-              className="output"
+              className={`output look-${settings.look}`}
               style={{ display: source ? 'block' : 'none' }}
             />
 
