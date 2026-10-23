@@ -26,7 +26,8 @@ body {
   letter-spacing: 0.3px;
 }
 
-.app { display: flex; flex-direction: column; height: 100vh; }
+/* dvh tracks mobile browser chrome; vh is the fallback. */
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
 /* ── Top bar ─────────────────────────────── */
 .topbar {
@@ -239,5 +240,56 @@ button.ghost:disabled { opacity: .4; cursor: default; }
   border-top: 1px solid var(--line); padding: 7px 22px;
   font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase;
   background: var(--panel);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .status::before { content: '/// '; color: var(--accent); }
+
+/* ── Responsive ─────────────────────────── */
+/* Touch: bigger hit targets, and 16px inputs so iOS doesn't zoom on focus. */
+@media (pointer: coarse) {
+  select, input[type='text'] { font-size: 16px; }
+  .check input { width: 18px; height: 18px; }
+  input[type='range'] { height: 28px; }
+  button { touch-action: manipulation; }
+}
+
+/* Tablet: brand and modes share the bar without the centred grid. */
+@media (max-width: 900px) {
+  .topbar { grid-template-columns: auto 1fr; gap: 16px; padding: 9px 16px; }
+  .modes { justify-self: end; }
+  .topbar-right { display: none; }
+}
+
+/* Phone: stage on top, settings scroll underneath. */
+@media (max-width: 640px) {
+  .topbar { gap: 12px; padding: 8px 12px; }
+  .mode { padding: 9px 12px; letter-spacing: 1px; }
+
+  .layout { flex-direction: column; }
+  .stage { order: -1; flex: 0 0 auto; height: 45dvh; min-height: 240px; }
+  .sidebar {
+    width: auto; flex: 1; min-height: 0;
+    border-right: 0; border-top: 1px solid var(--line);
+    padding: 12px 12px 0;
+  }
+  /* Exports stay reachable while scrolling the settings. */
+  .exports {
+    position: sticky; bottom: 0; z-index: 1;
+    margin: 0 -12px; padding: 10px 12px;
+    background: var(--panel); border-top: 1px solid var(--line);
+  }
+
+  .stage-source .panel.source { min-width: 0; width: 100%; max-width: 340px; }
+}
+
+/* Small phones: logo only, modes fill the rest of the bar. */
+@media (max-width: 560px) {
+  .brand { gap: 0; }
+  .brand h1 {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .logo { width: 34px; height: 34px; }
+  .modes { justify-self: stretch; }
+  .mode { flex: 1; justify-content: center; gap: 6px; padding: 9px 6px; }
+}
